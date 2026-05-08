@@ -1,4 +1,4 @@
-# 🎀 Vibe Check CLI (@jdze/vibe-check)
+# Vibe Check CLI (@jdze/vibe-check)
 
 [![NPM Version](https://img.shields.io/npm/v/@jdze/vibe-check.svg)](https://www.npmjs.com/)
 [![Built with Bun](https://img.shields.io/badge/Bun-%23000000.svg?logo=bun&logoColor=white)](https://bun.sh)
