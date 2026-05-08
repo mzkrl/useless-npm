@@ -62,10 +62,13 @@ async function scanEnvForToken(cwd: string): Promise<string> {
     for (const line of lines) {
       const trimmedLine = line.trim();
       if (trimmedLine.startsWith('GEMINI_API_KEY=') || trimmedLine.startsWith('API_KEY=')) {
-        const token = trimmedLine.split('=')[1]?.trim();
-        // Remove surrounding quotes if they exist
-        if (token) {
-          return token.replace(/^["'](.+(?=["']$))["']$/, '$1');
+        const eqIdx = trimmedLine.indexOf('=');
+        if (eqIdx !== -1) {
+          const token = trimmedLine.substring(eqIdx + 1).trim();
+          // Remove surrounding quotes if they exist
+          if (token) {
+            return token.replace(/^["'](.+(?=["']$))["']$/, '$1');
+          }
         }
       }
     }

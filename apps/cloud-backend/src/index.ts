@@ -27,6 +27,12 @@ const app = new Elysia()
 
     const now = Date.now();
     const requestTime = parseInt(timestamp, 10);
+
+    if (isNaN(requestTime)) {
+      set.status = 400;
+      return { error: 'Bad Request', details: 'Invalid timestamp.' };
+    }
+
     const timeDiff = Math.abs(now - requestTime);
 
     // Block requests older than 5 minutes (300000 ms)
@@ -40,7 +46,7 @@ const app = new Elysia()
     hmac.update(`${timestamp}:${bodyPayload}`);
     const expectedSignature = hmac.digest('hex');
 
-    if (signature !== expectedSignature) {
+    if (signature.length !== expectedSignature.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
       set.status = 403;
       return { error: 'Forbidden', details: 'Invalid signature.' };
     }
