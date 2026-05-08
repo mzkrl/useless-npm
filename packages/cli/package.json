@@ -1,12 +1,17 @@
 {
-  "name": "vibe-check",
+  "name": "@jdze/vibe-check",
   "version": "1.0.0",
   "type": "module",
   "bin": {
-    "vibe-check": "./src/index.ts"
+    "vibe-check": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "start": "bun run src/index.ts"
+    "build": "bun build src/index.ts --target=bun --outfile=dist/index.js",
+    "start": "bun run dist/index.js",
+    "prepublishOnly": "bun run build"
   },
   "dependencies": {
     "@clack/prompts": "latest",

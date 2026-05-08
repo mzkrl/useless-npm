@@ -57,6 +57,13 @@ bunx @[USERNAME_NPM_LU]/vibe-check
 * **Infrastructure:** Google Cloud Run (Untuk *endpoint* publik & proteksi API Key utama).
 
 ---
+## Example
+
+Tool ini udah mulai roasting kodenya sendiri dari hari pertama.
+
+![Contoh output](image.png)
+
+---
 
 ## ⚠️ Disclaimer
 
