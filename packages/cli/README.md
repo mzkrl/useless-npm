@@ -1,4 +1,4 @@
-# 🎀 Vibe Check CLI (@jdze/vibe-check)
+# Vibe Check CLI (@jdze/vibe-check)
 
 [![NPM Version](https://img.shields.io/npm/v/@jdze/vibe-check.svg)](https://www.npmjs.com/)
 [![Built with Bun](https://img.shields.io/badge/Bun-%23000000.svg?logo=bun&logoColor=white)](https://bun.sh)
@@ -77,4 +77,4 @@ Tool ini udah mulai roasting kodenya sendiri dari hari pertama.
 
 Merasa *prompt* AI-nya kurang galak? Atau UI-nya kurang *sreg*? Silakan *fork* repo ini dan kirim PR.
 
-**License:** MIT. Bebas lu pake, bebas lu modif, tapi gw ga tanggung jawab atas mental *developer* lu yang hancur. 🎀
+**License:** MIT. Bebas lu pake, bebas lu modif, tapi gw ga tanggung jawab atas mental *developer* lu yang hancur.
