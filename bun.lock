@@ -21,22 +21,21 @@
       },
     },
     "packages/cli": {
-      "name": "vibe-check",
-      "version": "1.0.0",
+      "name": "@jdze/vibe-check",
+      "version": "1.0.6",
       "bin": {
-        "vibe-check": "./src/index.ts",
+        "vibe-check": "./dist/index.js",
       },
       "dependencies": {
         "@clack/prompts": "latest",
-        "@elysiajs/cors": "latest",
         "@google/generative-ai": "latest",
-        "elysia": "latest",
         "open": "latest",
         "ora": "latest",
         "picocolors": "^1.1.1",
       },
       "devDependencies": {
         "@types/bun": "latest",
+        "@types/node": "latest",
       },
     },
   },
@@ -50,6 +49,8 @@
     "@elysiajs/cors": ["@elysiajs/cors@1.4.2", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-FTCcbH35brTLigF1W7BYySRZomgI/dBEMK9BgK9RP9Nez7zmpGh4koL/Yr1BFv8nYz7CfhRvcM8d/c+XnwMaVQ=="],
 
     "@google/generative-ai": ["@google/generative-ai@0.24.1", "", {}, "sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q=="],
+
+    "@jdze/vibe-check": ["@jdze/vibe-check@workspace:packages/cli"],
 
     "@sinclair/typebox": ["@sinclair/typebox@0.34.49", "", {}, "sha512-brySQQs7Jtn0joV8Xh9ZV/hZb9Ozb0pmazDIASBkYKCjXrXU3mpcFahmK/z4YDhGkQvP9mWJbVyahdtU5wQA+A=="],
 
@@ -158,8 +159,6 @@
     "uint8array-extras": ["uint8array-extras@1.5.0", "", {}, "sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A=="],
 
     "undici-types": ["undici-types@7.19.2", "", {}, "sha512-qYVnV5OEm2AW8cJMCpdV20CDyaN3g0AjDlOGf1OW4iaDEx8MwdtChUp4zu4H0VP3nDRF/8RKWH+IPp9uW0YGZg=="],
-
-    "vibe-check": ["vibe-check@workspace:packages/cli"],
 
     "wsl-utils": ["wsl-utils@0.3.1", "", { "dependencies": { "is-wsl": "^3.1.0", "powershell-utils": "^0.1.0" } }, "sha512-g/eziiSUNBSsdDJtCLB8bdYEUMj4jR7AGeUo96p/3dTafgjHhpF4RiCFPiRILwjQoDXx5MqkBr4fwWtR3Ky4Wg=="],
 

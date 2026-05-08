@@ -1,5 +1,4 @@
-import { Elysia } from 'elysia';
-import { cors } from '@elysiajs/cors';
+import * as http from 'http';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTemplate } from './template.js';
 
@@ -13,14 +12,26 @@ interface ServerConfig {
 export async function startLocalServer(config: ServerConfig): Promise<number> {
   const port = 6769;
 
-  const app = new Elysia()
-    .use(cors())
-    .get('/', () => {
-      return new Response(getTemplate(), {
-        headers: { 'Content-Type': 'text/html' }
-      });
-    })
-    .get('/api/roast', async () => {
+  const server = http.createServer(async (req, res) => {
+    // CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    if (req.method === 'GET' && req.url === '/') {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(getTemplate());
+      return;
+    }
+
+    if (req.method === 'GET' && req.url === '/api/roast') {
+      res.setHeader('Content-Type', 'application/json');
       try {
         if (config.personalKey) {
           // Direct Gemini call
@@ -35,7 +46,8 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
 
           const prompt = `Here is the user's project payload:\n\n${config.payload}`;
           const result = await model.generateContent(prompt);
-          return { roast: result.response.text() };
+          res.writeHead(200);
+          res.end(JSON.stringify({ roast: result.response.text() }));
         } else if (config.useCloudRun) {
           // Send to Cloud Run backend
           const targetUrl = process.env.CLOUD_RUN_URL || 'http://localhost:8080/api/roast'; //duh le billing kenonaktif
@@ -54,14 +66,18 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
           if (!response.ok) {
             try {
               const errorData = await response.json();
-              return errorData; // Return the backend error JSON so frontend can show it
+              res.writeHead(response.status);
+              res.end(JSON.stringify(errorData));
             } catch (e) {
-              return { error: `Cloud Run returned ${response.status} ${response.statusText}`, details: 'Btw coba direload aja ngab.' };
+              res.writeHead(response.status);
+              res.end(JSON.stringify({ error: `Cloud Run returned ${response.status} ${response.statusText}`, details: 'Btw coba direload aja ngab.' }));
             }
+            return;
           }
 
           const data = await response.json();
-          return data;
+          res.writeHead(200);
+          res.end(JSON.stringify(data));
         } else {
           throw new Error('No valid backend configuration found.');
         }
@@ -70,10 +86,20 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
         if (error.message && error.message.includes('503')) {
           errorMessage = 'Gemini API lagi High Demand (503). Coba reload browser lu barangkali beruntung.';
         }
-        return { error: errorMessage, details: error.message };
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: errorMessage, details: error.message }));
       }
-    });
+      return;
+    }
 
-  app.listen(port);
-  return port;
+    res.writeHead(404);
+    res.end('Not Found');
+  });
+
+  return new Promise((resolve) => {
+    server.listen(port, () => {
+      resolve(port);
+    });
+  });
 }
+

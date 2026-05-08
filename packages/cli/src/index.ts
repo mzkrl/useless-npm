@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import { intro, outro, select, text, isCancel, cancel } from '@clack/prompts';
 import pc from 'picocolors';
 import ora from 'ora';
