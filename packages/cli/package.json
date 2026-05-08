@@ -15,7 +15,8 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mzkrl/useless-npm.git"
+    "url": "git+https://github.com/mzkrl/useless-npm.git",
+    "directory": "packages/cli"
   },
   "bugs": {
     "url": "https://github.com/mzkrl/useless-npm/issues"
