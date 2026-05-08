@@ -1,0 +1,44 @@
+name: Publish CLI to NPM
+
+on:
+  # Jalan otomatis kalau lu bikin Release baru di GitHub
+  release:
+    types: [created]
+  # Bisa dipencet manual juga dari tab Actions
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Wajib buat NPM provenance biar ada badge verified di NPM
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
+      - name: Setup Node.js (buat NPM Publish)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+          
+      - name: Install Dependencies
+        run: bun install
+        
+      - name: Build CLI
+        run: bun run build
+        working-directory: packages/cli
+        
+      - name: Publish to NPM
+        run: npm publish --access public --provenance
+        working-directory: packages/cli
+        env:
+          # Lu harus masukin token NPM lu di GitHub Secrets -> NPM_TOKEN
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
