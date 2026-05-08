@@ -77,4 +77,4 @@ Tool ini udah mulai roasting kodenya sendiri dari hari pertama.
 
 Merasa *prompt* AI-nya kurang galak? Atau UI-nya kurang *sreg*? Silakan *fork* repo ini dan kirim PR.
 
-**License:** MIT. Bebas lu pake, bebas lu modif, tapi gw ga tanggung jawab atas mental *developer* lu yang hancur. 🎀
+**License:** MIT. Bebas lu pake, bebas lu modif, tapi gw ga tanggung jawab atas mental *developer* lu yang hancur. 
