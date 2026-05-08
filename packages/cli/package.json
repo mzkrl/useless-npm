@@ -1,6 +1,10 @@
 {
   "name": "@jdze/vibe-check",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "description": "A condescending 'Mesugaki' developer persona that roasts your garbage code.",
+  "author": "jdze",
+  "license": "MIT",
+  "keywords": ["cli", "roast", "gemini", "ai", "mesugaki", "code-review", "vibe-check"],
   "type": "module",
   "bin": {
     "vibe-check": "./dist/index.js"
