@@ -152,14 +152,18 @@ export function getTemplate() {
             el.innerHTML = '';
             
             const timer = setInterval(() => {
-                if (i < text.length) {
+                // Type multiple chars per tick for speed
+                let charsPerTick = 3;
+                while (i < text.length && charsPerTick > 0) {
                     el.innerHTML += text.charAt(i) === '\\n' ? '<br/>' : text.charAt(i);
                     i++;
-                } else {
+                    charsPerTick--;
+                }
+                if (i >= text.length) {
                     clearInterval(timer);
                     cursor.style.display = 'none';
                 }
-            }, 30);
+            }, 10);
         }
 
         // Advanced typewriter for HTML
@@ -179,7 +183,8 @@ export function getTemplate() {
             let inTag = false;
             
             const timer = setInterval(() => {
-                if (i < htmlStr.length) {
+                let charsPerTick = 5;
+                while(i < htmlStr.length && charsPerTick > 0) {
                     let char = htmlStr[i];
                     currentHTML += char;
                     if (char === '<') inTag = true;
@@ -193,9 +198,13 @@ export function getTemplate() {
                         if (char === '>') inTag = false;
                     }
                     
-                    container.innerHTML = currentHTML;
                     i++;
-                } else {
+                    charsPerTick--;
+                }
+                
+                container.innerHTML = currentHTML;
+                
+                if (i >= htmlStr.length) {
                     clearInterval(timer);
                     cursor.style.display = 'none';
                 }

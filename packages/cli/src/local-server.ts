@@ -40,7 +40,7 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
           const systemInstruction = `Lu adalah senior dev mesugaki yang hobi ngeroast noob. Output format wajib Markdown. The user's requested language for the roast is ${langStr}. Analyze their project files and give a condescending, bratty, yet technically accurate review of their garbage code. Roast their dependencies, their file sizes, and their code quality. Make it sting but funny.`;
 
           const model = genAI.getGenerativeModel({
-            model: process.env.GEMINI_MODEL || 'gemini-3-flash-preview',
+            model: process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite',
             systemInstruction,
           });
 
