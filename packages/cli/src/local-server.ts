@@ -52,7 +52,12 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
           });
 
           if (!response.ok) {
-            throw new Error(`Cloud Run returned ${response.status} ${response.statusText}`);
+            try {
+              const errorData = await response.json();
+              return errorData; // Return the backend error JSON so frontend can show it
+            } catch (e) {
+              return { error: `Cloud Run returned ${response.status} ${response.statusText}`, details: 'Btw coba direload aja ngab.' };
+            }
           }
 
           const data = await response.json();
@@ -60,8 +65,12 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
         } else {
           throw new Error('No valid backend configuration found.');
         }
-      } catch (e: any) {
-        return { error: 'Gagal nge-roast.', details: e.message };
+      } catch (error: any) {
+        let errorMessage = 'Gagal nge-roast via local.';
+        if (error.message && error.message.includes('503')) {
+            errorMessage = 'Gemini API lagi High Demand (503). Coba reload browser lu barangkali beruntung.';
+        }
+        return { error: errorMessage, details: error.message };
       }
     });
 

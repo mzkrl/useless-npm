@@ -8,8 +8,18 @@ import * as path from 'path';
 import { startLocalServer } from './local-server.js';
 
 const MAX_PAYLOAD_SIZE = 100 * 1024; // 100 KB
-const ALLOWED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.html', '.css', '.md'];
-const IGNORED_DIRS = ['node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 'out'];
+const ALLOWED_EXTENSIONS = [
+  // Web & JS Ecosystem
+  '.js', '.ts', '.jsx', '.tsx', '.mjs', '.cjs', '.vue', '.svelte', '.html', '.css', '.scss', '.sass', '.less', '.styl', '.pug', '.hbs', '.astro',
+  // Backend, Mobile & Systems
+  '.py', '.go', '.rs', '.java', '.cpp', '.c', '.h', '.hpp', '.cs', '.php', '.rb', '.swift', '.kt', '.kts', '.scala', '.m', '.mm', '.dart',
+  // Scripts & Configs
+  '.sh', '.bash', '.zsh', '.bat', '.ps1', '.lua', '.r', '.jl', '.pl', '.ex', '.exs', '.erl', '.clj', '.fs', '.f', '.f90', '.zig', '.v', '.nim', '.cr',
+  // Data, Docs & Environment
+  '.json', '.yaml', '.yml', '.toml', '.xml', '.env', '.md', '.sql', '.ini', '.conf', '.cfg', '.dockerfile', '.make', '.cmake', '.gradle'
+];
+const IGNORED_DIRS = ['node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 'out', '.svelte-kit'];
+const IGNORED_FILES = ['bun.lockb', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock'];
 
 interface ScanResult {
   totalSize: number;
@@ -25,8 +35,11 @@ async function scanDirectory(dir: string, result: ScanResult) {
       await scanDirectory(path.join(dir, entry.name), result);
     } else {
       const ext = path.extname(entry.name);
-      if (ALLOWED_EXTENSIONS.includes(ext)) {
+      if (ALLOWED_EXTENSIONS.includes(ext) || entry.name.startsWith('.env')) {
+        if (IGNORED_FILES.includes(entry.name)) continue;
         const filePath = path.join(dir, entry.name);
+        // Avoid duplicate package.json since it's already added manually
+        if (entry.name === 'package.json' && dir === process.cwd()) continue;
         try {
           const stats = await fs.stat(filePath);
           result.totalSize += stats.size;
@@ -81,30 +94,39 @@ async function main() {
     process.exit(0);
   }
 
+  const isId = language === 'ID';
+
   let useCloudRun = false;
   let personalKey = '';
 
   if (scanResult.totalSize <= MAX_PAYLOAD_SIZE) {
     const keyChoice = await select({
-      message: 'Mau pake API Key Gemini sendiri atau pake jatah gw (Cloud Run)?',
-      options: [
-        { value: 'cloud', label: 'Pake jatah lu ngab (Cloud Run)' },
-        { value: 'personal', label: 'Gw orang kaya, pake API Key sendiri' },
-      ],
+      message: isId 
+        ? 'Mau pake API Key Gemini sendiri atau pake jatah gw (Cloud Run)?'
+        : 'Use your own Gemini API Key or use mine (Cloud Run)?',
+      options: isId 
+        ? [
+            { value: 'cloud', label: 'Pake jatah lu ngab (Cloud Run)' },
+            { value: 'personal', label: 'Gw orang kaya, pake API Key sendiri' }
+          ]
+        : [
+            { value: 'cloud', label: 'Use yours bro (Cloud Run)' },
+            { value: 'personal', label: 'I am rich, use my own API Key' }
+          ]
     });
 
     if (isCancel(keyChoice)) {
-      cancel('Yaelah pake cancel segala.');
+      cancel(isId ? 'Yaelah pake cancel segala.' : 'Cancelled.');
       process.exit(0);
     }
 
     if (keyChoice === 'personal') {
       const key = await text({
-        message: 'Mana API Key Gemini lu?',
+        message: isId ? 'Mana API Key Gemini lu?' : 'Enter your Gemini API Key:',
         placeholder: 'AIzaSy...',
       });
       if (isCancel(key)) {
-        cancel('Batal deh.');
+        cancel(isId ? 'Batal deh.' : 'Cancelled.');
         process.exit(0);
       }
       personalKey = key as string;
@@ -112,20 +134,26 @@ async function main() {
       useCloudRun = true;
     }
   } else {
-    console.log(pc.red(`File lu kegedean (${sizeKB} KB)! Server gw bisa jebol nampung kode ampas lu. Modal API Key sendiri, noob!`));
+    console.log(pc.red(isId 
+      ? `File lu kegedean (${sizeKB} KB)! Server gw bisa jebol nampung kode ampas lu. Modal API Key sendiri, noob!`
+      : `Your file is too big (${sizeKB} KB)! My server will crash handling your garbage code. Use your own API Key, noob!`
+    ));
     const key = await text({
-      message: 'Mana API Key Gemini lu?',
+      message: isId ? 'Mana API Key Gemini lu?' : 'Enter your Gemini API Key:',
       placeholder: 'AIzaSy...',
     });
     if (isCancel(key)) {
-      cancel('Dasar noob!');
+      cancel(isId ? 'Dasar noob!' : 'Typical noob!');
       process.exit(0);
     }
     personalKey = key as string;
   }
 
-  const startingSpinner = ora(pc.magenta('Menganalisa tumpukan sampah di direktori lu... 🗑️')).start();
-
+  const startingMessage = isId 
+    ? 'Menganalisa tumpukan sampah di direktori lu... 🗑️'
+    : 'Analyzing the garbage dump in your directory... 🗑️';
+  const startingSpinner = ora(pc.magenta(startingMessage)).start();
+  
   // Start server
   const port = await startLocalServer({
     payload: scanResult.payload,
@@ -135,8 +163,11 @@ async function main() {
   });
 
   startingSpinner.stop();
-
-  outro(pc.green(`Server nyala di http://localhost:${port} - Buka browser lu!`));
+  
+  outro(pc.green(isId 
+    ? `Server nyala di http://localhost:${port} - Buka browser lu!`
+    : `Server is running at http://localhost:${port} - Open your browser!`
+  ));
 
   open(`http://localhost:${port}`);
 }

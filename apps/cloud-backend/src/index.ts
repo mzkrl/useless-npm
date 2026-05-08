@@ -37,8 +37,11 @@ const app = new Elysia()
         return { roast: text };
       } catch (error: any) {
         set.status = 500;
-        console.error('Error hitting Gemini:', error);
-        return { error: 'Gagal nge-roast, AI-nya pusing liat kode lu.', details: error.message };
+        let errorMessage = 'Gagal nge-roast, Gemini-nya lagi ngambek atau kuota API habis.';
+        if (error.message && error.message.includes('503')) {
+            errorMessage = 'Gemini API lagi High Demand (503). Coba reload browser lu barangkali beruntung.';
+        }
+        return { error: errorMessage, details: error.message };
       }
     },
     {
