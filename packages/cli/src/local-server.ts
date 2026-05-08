@@ -38,7 +38,7 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
           return { roast: result.response.text() };
         } else if (config.useCloudRun) {
           // Send to Cloud Run backend
-          const targetUrl = process.env.CLOUD_RUN_URL || 'http://localhost:8080/api/roast';
+          const targetUrl = process.env.CLOUD_RUN_URL || 'http://localhost:8080/api/roast'; //duh le billing kenonaktif
 
           const response = await fetch(targetUrl, {
             method: 'POST',
@@ -68,7 +68,7 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
       } catch (error: any) {
         let errorMessage = 'Gagal nge-roast via local.';
         if (error.message && error.message.includes('503')) {
-            errorMessage = 'Gemini API lagi High Demand (503). Coba reload browser lu barangkali beruntung.';
+          errorMessage = 'Gemini API lagi High Demand (503). Coba reload browser lu barangkali beruntung.';
         }
         return { error: errorMessage, details: error.message };
       }
