@@ -13,6 +13,14 @@
     "code-review",
     "vibe-check"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mzkrl/useless-npm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mzkrl/useless-npm/issues"
+  },
+  "homepage": "https://github.com/mzkrl/useless-npm#readme",
   "type": "module",
   "bin": {
     "vibe-check": "./dist/index.js"
