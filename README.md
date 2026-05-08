@@ -99,7 +99,7 @@ Jadi, ketika *CLI* ini nge-*roast* dan menghina-hina kode lu, *under the hood*, 
 Proyek ini dibangun menggunakan *pipeline* *vibe coding* dengan *tooling* Google yang *overpowered*:
 * **Planning / Refining:** Ngobrol panjang lebar buat matengin konsep pakai **Gemini 3.1 Pro** (via website).
 * **Coding:** Dieksekusi gila-gilaan pakai **Antigravity Gemini 3.1 Pro High** & **Google Jules Gemini 3.1 Pro**.
-* **Deployment:** *Backend* di-deploy menggunakan **Google Cloud Run**.
+* **Deployment:** *Backend* super *secure* menggunakan **Google Cloud Run**.
 
 ---
 
