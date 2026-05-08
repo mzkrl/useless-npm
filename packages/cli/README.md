@@ -62,7 +62,7 @@ bunx @jdze/vibe-check
 
 Tool ini udah mulai roasting kodenya sendiri dari hari pertama.
 
-![Contoh output](image.png)
+![Contoh output](https://raw.githubusercontent.com/mzkrl/useless-npm/refs/heads/main/image.png)
 
 ---
 
