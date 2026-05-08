@@ -1,6 +1,9 @@
 import * as http from 'http';
+import * as crypto from 'crypto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTemplate } from './template.js';
+
+const VIBE_CHECK_SECRET_SEED = 'vibe-check-super-secret-seed-12345';
 
 interface ServerConfig {
   payload: string;
@@ -52,15 +55,24 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
           // Send to Cloud Run backend
           const targetUrl = process.env.CLOUD_RUN_URL || 'http://localhost:8080/api/roast'; //duh le billing kenonaktif
 
+          const timestamp = Date.now().toString();
+          const bodyPayload = JSON.stringify({
+              payload: config.payload,
+              language: config.language
+          });
+
+          const hmac = crypto.createHmac('sha256', VIBE_CHECK_SECRET_SEED);
+          hmac.update(`${timestamp}:${bodyPayload}`);
+          const signature = hmac.digest('hex');
+
           const response = await fetch(targetUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'x-vibe-timestamp': timestamp,
+              'x-vibe-signature': signature
             },
-            body: JSON.stringify({
-              payload: config.payload,
-              language: config.language
-            }),
+            body: bodyPayload,
           });
 
           if (!response.ok) {

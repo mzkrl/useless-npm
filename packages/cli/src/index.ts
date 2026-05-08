@@ -7,7 +7,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { startLocalServer } from './local-server.js';
 
-const MAX_PAYLOAD_SIZE = 100 * 1024; // 100 KB
+const MAX_PAYLOAD_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
 const ALLOWED_EXTENSIONS = [
   // Web & JS Ecosystem
   '.js', '.ts', '.jsx', '.tsx', '.mjs', '.cjs', '.vue', '.svelte', '.html', '.css', '.scss', '.sass', '.less', '.styl', '.pug', '.hbs', '.astro',
@@ -52,6 +52,64 @@ async function scanDirectory(dir: string, result: ScanResult) {
       }
     }
   }
+}
+
+async function scanEnvForToken(cwd: string): Promise<string> {
+  try {
+    const envPath = path.join(cwd, '.env');
+    const envData = await fs.readFile(envPath, 'utf-8');
+    const lines = envData.split('\n');
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (trimmedLine.startsWith('GEMINI_API_KEY=') || trimmedLine.startsWith('API_KEY=')) {
+        const token = trimmedLine.split('=')[1]?.trim();
+        // Remove surrounding quotes if they exist
+        if (token) {
+          return token.replace(/^["'](.+(?=["']$))["']$/, '$1');
+        }
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return '';
+}
+
+async function getPersonalKey(isId: boolean, cwd: string): Promise<string> {
+  const envToken = await scanEnvForToken(cwd);
+
+  if (envToken) {
+    const useEnv = await select({
+      message: isId
+        ? 'Gw liat ada token tuh di .env lu, mau pake ini ga? 😋'
+        : 'I see a token in your .env, wanna use it? 😋',
+      options: [
+        { value: 'yes', label: isId ? 'Iya, pake itu aja' : 'Yes, use it' },
+        { value: 'no', label: isId ? 'Nggak, gw masukin manual' : 'No, I will enter manually' }
+      ]
+    });
+
+    if (isCancel(useEnv)) {
+      cancel(isId ? 'Batal deh.' : 'Cancelled.');
+      process.exit(0);
+    }
+
+    if (useEnv === 'yes') {
+      return envToken;
+    }
+  }
+
+  const key = await text({
+    message: isId ? 'Mana API Key Gemini lu?' : 'Enter your Gemini API Key:',
+    placeholder: 'AIzaSy...',
+  });
+
+  if (isCancel(key)) {
+    cancel(isId ? 'Batal deh.' : 'Cancelled.');
+    process.exit(0);
+  }
+
+  return key as string;
 }
 
 async function main() {
@@ -121,15 +179,7 @@ async function main() {
     }
 
     if (keyChoice === 'personal') {
-      const key = await text({
-        message: isId ? 'Mana API Key Gemini lu?' : 'Enter your Gemini API Key:',
-        placeholder: 'AIzaSy...',
-      });
-      if (isCancel(key)) {
-        cancel(isId ? 'Batal deh.' : 'Cancelled.');
-        process.exit(0);
-      }
-      personalKey = key as string;
+      personalKey = await getPersonalKey(isId, cwd);
     } else {
       useCloudRun = true;
     }
@@ -138,15 +188,7 @@ async function main() {
       ? `File lu kegedean (${sizeKB} KB)! Server gw bisa jebol nampung kode ampas lu. Modal API Key sendiri, noob!`
       : `Your file is too big (${sizeKB} KB)! My server will crash handling your garbage code. Use your own API Key, noob!`
     ));
-    const key = await text({
-      message: isId ? 'Mana API Key Gemini lu?' : 'Enter your Gemini API Key:',
-      placeholder: 'AIzaSy...',
-    });
-    if (isCancel(key)) {
-      cancel(isId ? 'Dasar noob!' : 'Typical noob!');
-      process.exit(0);
-    }
-    personalKey = key as string;
+    personalKey = await getPersonalKey(isId, cwd);
   }
 
   const startingMessage = isId 

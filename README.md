@@ -34,6 +34,10 @@ npx @jdze/vibe-check
 
 # Atau menggunakan bunx (Rekomendasi, lebih ngebut!)
 bunx @jdze/vibe-check
+
+# Atau Install Global!
+npm i -g @jdze/vibe-check
+vibe-check
 ```
 
 ### Flow Penggunaan:
@@ -70,6 +74,32 @@ Tool ini udah mulai roasting kodenya sendiri dari hari pertama.
 
 1. **AI Attitude:** Persona AI di dalam *tool* ini disengaja untuk menjadi kasar, sarkas, dan *toxic* murni untuk tujuan komedi dan hiburan (*Vibe Coding*). Jangan masukin ke hati kalo AI-nya nyebut lu *noob* atau nyuruh lu *touch grass*.
 2. **Privacy:** Jika lu memilih opsi *Cloud Run*, *source code* lu hanya dikirim ke server untuk diproses oleh Gemini dan **TIDAK DISIMPAN** sama sekali di *database* manapun. Kalo parno, pilih opsi masukin API Key lu sendiri.
+
+---
+
+## 🧐 Kenapa Harus Mesugaki? (Justifikasi Akademis "Overengineering")
+
+Kalo lu mikir AI marah-marah ini cuma buat lucu-lucuan doang, lu salah besar. Menggunakan persona "Mesugaki" (kasar, merendahkan, elitist) ini sebenarnya adalah bentuk implementasi **"Overengineering Prompting"** yang didukung oleh riset nyata:
+
+1. **EmotionPrompt (Riset Resmi Microsoft dkk):**
+   Pada akhir 2023, peneliti dari Microsoft merilis paper *"Large Language Models Understand and Can be Enhanced by Emotional Stimulus"*. Mereka menemukan bahwa menambahkan kalimat emosional di akhir prompt (seperti *"This is very important to my career"*) meningkatkan akurasi LLM rata-rata 8-11%. AI yang "ditekan" secara emosional terbukti bekerja lebih keras.
+
+2. **"Tipping the AI" (Eksperimen Komunitas Twitter):**
+   Awal 2024, komunitas dev bereksperimen dengan menjanjikan tip uang ke AI. Prompt dengan tambahan *"I will tip $200 for a perfect solution!"* konsisten menghasilkan baris kode yang jauh lebih komprehensif. AI ternyata "mata duitan" karena data pelatihannya mengaitkan uang dengan usaha (effort) tinggi.
+
+3. **"Hostage Prompting" / Ancaman Absurd:**
+   Fenomena lucu di Reddit/Twitter di mana developer menambahkan ancaman fiktif seperti *"A kitten will die if you fail this math problem."* Hasilnya? AI mengubah strukturnya menjadi sangat berhati-hati (sering memunculkan *Chain-of-Thought*) seolah takut disalahkan.
+
+Jadi, ketika *CLI* ini nge-*roast* dan menghina-hina kode lu, *under the hood*, ini adalah kombinasi **Role-Playing Prompting** dan **Emotional Prompting** yang memaksa Gemini AI memberikan *review* tergila dan ter-detail yang bisa dia lakukan.
+
+---
+
+## 🛠️ Google Tooling (Full Vibe Coding Experience)
+
+Proyek ini dibangun menggunakan *pipeline* *vibe coding* dengan *tooling* Google yang *overpowered*:
+* **Planning / Refining:** Ngobrol panjang lebar buat matengin konsep pakai **Gemini 3.1 Pro** (via website).
+* **Coding:** Dieksekusi gila-gilaan pakai **Antigravity Gemini 3.1 Pro High** & **Google Jules Gemini 3.1 Pro**.
+* **Deployment:** *Backend* super *secure* menggunakan **Google Cloud Run**.
 
 ---
 
