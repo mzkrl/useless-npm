@@ -112,34 +112,79 @@ export function getTemplate() {
 
         <div class="nes-container with-title is-dark">
             <p class="title">Vibe Check Result</p>
-            <div id="loading">Scanning code... Wait up, noob.</div>
+            <div id="loading">
+                <p id="loading-text">Scanning code... Wait up, noob.</p>
+                <progress class="nes-progress is-warning" value="30" max="100" id="loading-bar" style="margin-top: 1rem;"></progress>
+            </div>
             <div id="roast-output" class="roast-content"></div>
             <span id="cursor" class="cursor" style="display: none;"></span>
         </div>
     </div>
 
     <script>
+        const loadingMessages = [
+            "Scanning code... Wait up, noob.",
+            "Reading your spaghetti code... 🍝",
+            "Counting your sins... and your unused imports.",
+            "Judging your variable names... yikes.",
+            "Opening your node_modules... oh God why.",
+            "Consulting the ancient scrolls of Stack Overflow...",
+            "Your code is so bad, my AI needs therapy after this. 💀",
+            "Warming up the roast... medium rare or well done?",
+            "Checking if 'it works on my machine' is valid... it's not.",
+            "Analyzing dependency tree... it's more like a dependency jungle. 🌴",
+            "Loading insults database... 99% full.",
+            "Compiling your sins into a neat Markdown report...",
+            "Fetching the burn unit... they're gonna need it. 🔥",
+            "Decrypting your terrible architecture choices...",
+            "AI-nya lagi mikir kenapa lu bikin kode kayak gini...",
+            "Ngitung berapa banyak technical debt lu... gila banyak.",
+            "Cross-referencing your code with 'what not to do' guides...",
+            "Even GitHub Copilot refused to autocomplete your code. 💀",
+            "Gemini is questioning its existence after reading your code...",
+            "Your code is loading... unlike your career as a developer. 😏",
+        ];
+
+        let msgIndex = 0;
+        let progressVal = 10;
+        const loadingEl = document.getElementById('loading-text');
+        const loadingBar = document.getElementById('loading-bar');
+
+        const msgInterval = setInterval(() => {
+            msgIndex = (msgIndex + 1) % loadingMessages.length;
+            loadingEl.style.opacity = '0';
+            setTimeout(() => {
+                loadingEl.textContent = loadingMessages[msgIndex];
+                loadingEl.style.opacity = '1';
+            }, 300);
+            // Slowly progress the bar (caps at 90%)
+            if (progressVal < 90) {
+                progressVal += Math.random() * 8 + 2;
+                if (progressVal > 90) progressVal = 90;
+                loadingBar.value = Math.floor(progressVal);
+            }
+        }, 3000);
+
+        // Add transition for smooth text swap
+        loadingEl.style.transition = 'opacity 0.3s ease';
+
         async function fetchRoast() {
             try {
                 const res = await fetch('/api/roast');
                 const data = await res.json();
-                
+
+                clearInterval(msgInterval);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('header-avatar').style.display = 'flex';
-                
+
                 if (data.error) {
                     typeWriter(data.error + "\\n\\n" + (data.details || ''));
                 } else {
                     const htmlContent = marked.parse(data.roast);
-                    // To do a typewriter effect with HTML is tricky, so we'll just inject the HTML
-                    // and apply a fade-in or simple reveal. For a true typewriter effect, 
-                    // we can type text nodes and reveal elements, but let's do a simplified one 
-                    // or just reveal it chunk by chunk if we want it fully typed.
-                    
-                    // Actually, a simpler way to typewrite HTML:
                     typeHTML(htmlContent, document.getElementById('roast-output'));
                 }
             } catch (err) {
+                clearInterval(msgInterval);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('roast-output').innerText = 'Failed to connect to backend: ' + err.message;
             }

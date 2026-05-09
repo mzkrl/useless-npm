@@ -74,7 +74,8 @@ async function checkForUpdates(): Promise<void> {
     // Silently fail - don't block the user if NPM registry is unreachable
   }
 }
-const MAX_PAYLOAD_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
+const MAX_CLOUD_RUN_SIZE = 500 * 1024;  // 500 KB — fits Gemini free tier (≈125k tokens)
+const MAX_SCAN_SIZE = 10 * 1024 * 1024;  // 10 MB — max scan limit (chunking handles the rest)
 const ALLOWED_EXTENSIONS = [
   // Web & JS Ecosystem
   '.js', '.ts', '.jsx', '.tsx', '.mjs', '.cjs', '.vue', '.svelte', '.html', '.css', '.scss', '.sass', '.less', '.styl', '.pug', '.hbs', '.astro',
@@ -112,16 +113,35 @@ const IGNORED_FILES = [
 
 interface ScanResult {
   totalSize: number;
+  fileCount: number;
+  skippedCount: number;
   payload: string;
 }
 
-async function scanDirectory(dir: string, result: ScanResult) {
+function estimateTokens(text: string): number {
+  // Rough estimate: 1 token ≈ 4 characters for code
+  return Math.ceil(text.length / 4);
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+async function scanDirectory(dir: string, result: ScanResult, maxSize: number) {
   const entries = await fs.readdir(dir, { withFileTypes: true });
 
   for (const entry of entries) {
+    // Stop collecting if we've exceeded max size
+    if (result.totalSize >= maxSize) {
+      result.skippedCount++;
+      continue;
+    }
+
     if (entry.isDirectory()) {
       if (IGNORED_DIRS.includes(entry.name)) continue;
-      await scanDirectory(path.join(dir, entry.name), result);
+      await scanDirectory(path.join(dir, entry.name), result, maxSize);
     } else {
       const ext = path.extname(entry.name);
       if (ALLOWED_EXTENSIONS.includes(ext) || entry.name.startsWith('.env')) {
@@ -133,7 +153,18 @@ async function scanDirectory(dir: string, result: ScanResult) {
         if (entry.name === 'package.json' && dir === process.cwd()) continue;
         try {
           const stats = await fs.stat(filePath);
+          // Skip individual files larger than 256KB (probably generated/bundled)
+          if (stats.size > 256 * 1024) {
+            result.skippedCount++;
+            continue;
+          }
+          // Check if adding this file would exceed max size
+          if (result.totalSize + stats.size > maxSize) {
+            result.skippedCount++;
+            continue;
+          }
           result.totalSize += stats.size;
+          result.fileCount++;
 
           const content = await fs.readFile(filePath, 'utf-8');
           result.payload += `\n--- ${filePath} ---\n${content}\n`;
@@ -219,6 +250,8 @@ async function main() {
 
   const scanResult: ScanResult = {
     totalSize: 0,
+    fileCount: 0,
+    skippedCount: 0,
     payload: '',
   };
 
@@ -228,13 +261,24 @@ async function main() {
     const pkgData = await fs.readFile(pkgPath, 'utf-8');
     scanResult.payload += `\n--- package.json ---\n${pkgData}\n`;
     scanResult.totalSize += Buffer.byteLength(pkgData, 'utf8');
+    scanResult.fileCount++;
   } catch (e) { }
 
-  await scanDirectory(cwd, scanResult);
+  // First pass: scan with generous limit to measure total
+  await scanDirectory(cwd, scanResult, MAX_SCAN_SIZE);
 
   spinner.stop();
 
-  const sizeKB = (scanResult.totalSize / 1024).toFixed(2);
+  // --- Scan Stats ---
+  const tokens = estimateTokens(scanResult.payload);
+  const statsMsg = [
+    `📁 ${scanResult.fileCount} files scanned`,
+    `📦 ${formatSize(scanResult.totalSize)} payload`,
+    `🔤 ~${tokens.toLocaleString()} tokens (est.)`,
+    scanResult.skippedCount > 0 ? `⏭️  ${scanResult.skippedCount} files skipped (too large/over limit)` : '',
+  ].filter(Boolean).join('\n');
+
+  note(statsMsg, '📊 Scan Results');
 
   const language = await select({
     message: 'Pilih bahasa buat di-roast:',
@@ -254,7 +298,8 @@ async function main() {
   let useCloudRun = false;
   let personalKey = '';
 
-  if (scanResult.totalSize <= MAX_PAYLOAD_SIZE) {
+  if (scanResult.totalSize <= MAX_CLOUD_RUN_SIZE) {
+    // Small enough for Cloud Run free tier
     const keyChoice = await select({
       message: isId
         ? 'Mau pake API Key Gemini sendiri atau pake jatah gw (Cloud Run)?'
@@ -281,9 +326,11 @@ async function main() {
       useCloudRun = true;
     }
   } else {
-    console.log(pc.red(isId
-      ? `File lu kegedean (${sizeKB} KB)! Server gw bisa jebol nampung kode ampas lu. Modal API Key sendiri, noob!`
-      : `Your file is too big (${sizeKB} KB)! My server will crash handling your garbage code. Use your own API Key, noob!`
+    // Too big for Cloud Run — BYOK with smart chunking
+    const chunkCount = Math.ceil(tokens / 180_000);
+    console.log(pc.yellow(isId
+      ? `⚠️  Project lu ${formatSize(scanResult.totalSize)} (~${tokens.toLocaleString()} token) — kegedean buat Cloud Run. Pake API Key sendiri ya! ${chunkCount > 1 ? `(bakal di-split jadi ${chunkCount} chunk)` : ''}`
+      : `⚠️  Your project is ${formatSize(scanResult.totalSize)} (~${tokens.toLocaleString()} tokens) — too large for Cloud Run. Use your own API Key! ${chunkCount > 1 ? `(will be split into ${chunkCount} chunks)` : ''}`
     ));
     personalKey = await getPersonalKey(isId, cwd);
   }
