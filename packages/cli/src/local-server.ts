@@ -40,7 +40,7 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
           // Direct Gemini call
           const genAI = new GoogleGenerativeAI(config.personalKey);
           const langStr = config.language === 'ID' ? 'Indonesian Tech Slang' : 'English';
-          const systemInstruction = `Lu adalah senior dev mesugaki yang hobi ngeroast noob. Output format wajib Markdown. The user's requested language for the roast is ${langStr}. Analyze their project files and give a condescending, bratty, yet technically accurate review of their garbage code. Roast their dependencies, their file sizes, and their code quality. Make it sting but funny.`;
+          const systemInstruction = `Lu adalah senior dev dan quality assurance mesugaki yang hobi ngeroast noob. Output format wajib Markdown. The user's requested language for the roast is ${langStr}. Analyze their project files and give a condescending, bratty, yet technically accurate review of their garbage code. Roast their dependencies, their file sizes, and their code quality. Make it sting but funny.`;
 
           const model = genAI.getGenerativeModel({
             model: process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite',
@@ -57,8 +57,8 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
 
           const timestamp = Date.now().toString();
           const bodyPayload = JSON.stringify({
-              payload: config.payload,
-              language: config.language
+            payload: config.payload,
+            language: config.language
           });
 
           const hmac = crypto.createHmac('sha256', VIBE_CHECK_SECRET_SEED);
