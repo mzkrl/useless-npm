@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTemplate } from './template.js';
 
-const VIBE_CHECK_SECRET_SEED = 'vibe-check-super-secret-seed-12345';
+const VIBE_CHECK_SECRET_SEED = 'pisangnanasalpukatdurenapelpepayaanggursemangka';
 
 interface ServerConfig {
   payload: string;

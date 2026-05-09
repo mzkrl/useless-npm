@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
 const port = process.env.PORT || 8080;
-const VIBE_CHECK_SECRET_SEED = 'vibe-check-super-secret-seed-12345';
+const VIBE_CHECK_SECRET_SEED = 'pisangnanasalpukatdurenapelpepayaanggursemangka';
 const API_KEY = process.env.GEMINI_API_KEY || '';
 const RATE_LIMIT_PER_IP = 7; // Max requests per IP per day
 
