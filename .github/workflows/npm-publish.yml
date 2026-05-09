@@ -4,8 +4,6 @@ on:
   # Auto-publish tiap push ke main (cuma jalan kalo versi beda)
   push:
     branches: [main]
-    paths:
-      - 'packages/cli/**'
   # Bisa dipencet manual juga dari tab Actions
   workflow_dispatch:
 
