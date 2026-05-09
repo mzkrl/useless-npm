@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
 const port = process.env.PORT || 8080;
-const VIBE_CHECK_SECRET_SEED = 'vibe-check-super-secret-seed-12345';
+const SECRET_SEED = '7d56c3918a1f6a9d3a5c1b7e8f0c4d2e1f3a5b7c8d9e0f1a2b3c4d5e6f7a8b9c';
 const API_KEY = process.env.GEMINI_API_KEY || '';
 const RATE_LIMIT_PER_IP = 7; // Max requests per IP per day
 
@@ -102,7 +102,7 @@ const app = new Elysia()
     }
 
     const bodyPayload = JSON.stringify(body);
-    const hmac = crypto.createHmac('sha256', VIBE_CHECK_SECRET_SEED);
+    const hmac = crypto.createHmac('sha256', SECRET_SEED);
     hmac.update(`${timestamp}:${bodyPayload}`);
     const expectedSignature = hmac.digest('hex');
 
