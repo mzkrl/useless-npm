@@ -15,7 +15,10 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 const app = new Elysia()
   .use(cors())
-  .onBeforeHandle(({ headers, body, set }) => {
+  .onBeforeHandle(({ request, headers, body, set }) => {
+    // Bypass authentication for CORS preflight
+    if (request.method === 'OPTIONS') return;
+
     // Validate HMAC Signature
     const timestamp = headers['x-vibe-timestamp'];
     const signature = headers['x-vibe-signature'];
