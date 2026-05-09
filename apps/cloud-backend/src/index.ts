@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 const port = process.env.PORT || 8080;
 const VIBE_CHECK_SECRET_SEED = 'vibe-check-super-secret-seed-12345';
 const API_KEY = process.env.GEMINI_API_KEY || '';
+const RATE_LIMIT_PER_IP = 7; // Max requests per IP per day
 
 if (!API_KEY) {
   console.warn('WARNING: GEMINI_API_KEY environment variable is not set.');
@@ -13,14 +14,50 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
+// --- In-memory Rate Limiter ---
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(headers: Record<string, string | undefined>): string {
+  return headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const entry = rateLimitStore.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    // New window: reset at next midnight UTC
+    const tomorrow = new Date();
+    tomorrow.setUTCHours(24, 0, 0, 0);
+    rateLimitStore.set(ip, { count: 1, resetAt: tomorrow.getTime() });
+    return { allowed: true, remaining: RATE_LIMIT_PER_IP - 1 };
+  }
+
+  if (entry.count >= RATE_LIMIT_PER_IP) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  entry.count++;
+  return { allowed: true, remaining: RATE_LIMIT_PER_IP - entry.count };
+}
+
+// Periodically clean up expired entries (every 1 hour)
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitStore) {
+    if (now > entry.resetAt) rateLimitStore.delete(ip);
+  }
+}, 60 * 60 * 1000);
+
+// --- App ---
 const app = new Elysia()
   .use(cors())
   .get('/', () => {
     return 'Backend is running.\n\nInstall the CLI to roast your code:\nnpm i -g @jdze/vibe-check';
   })
   .onBeforeHandle(({ request, headers, body, set }) => {
-    // Bypass authentication for CORS preflight
-    if (request.method === 'OPTIONS') return;
+    // Bypass auth for CORS preflight and GET routes (like /)
+    if (request.method === 'OPTIONS' || request.method === 'GET') return;
 
     // Validate HMAC Signature
     const timestamp = headers['x-vibe-timestamp'];
@@ -28,7 +65,10 @@ const app = new Elysia()
 
     if (!timestamp || !signature) {
       set.status = 401;
-      return { error: 'Unauthorized', details: 'Missing authentication headers.' };
+      return {
+        error: '🚫 Akses Ditolak',
+        details: 'Request lu gak punya header autentikasi yang valid. Pastiin lu pake CLI resmi (@jdze/vibe-check) buat nge-roast, jangan asal nembak endpoint ya ngab.'
+      };
     }
 
     const now = Date.now();
@@ -36,15 +76,20 @@ const app = new Elysia()
 
     if (isNaN(requestTime)) {
       set.status = 400;
-      return { error: 'Bad Request', details: 'Invalid timestamp.' };
+      return {
+        error: '⏱️ Timestamp Gak Valid',
+        details: 'Format timestamp request lu aneh. Coba update CLI lu ke versi terbaru: npm i -g @jdze/vibe-check@latest'
+      };
     }
 
     const timeDiff = Math.abs(now - requestTime);
 
-    // Block requests older than 5 minutes (300000 ms)
     if (timeDiff > 300000) {
       set.status = 403;
-      return { error: 'Forbidden', details: 'Request expired.' };
+      return {
+        error: '⌛ Request Kedaluwarsa',
+        details: 'Request lu udah expired (lebih dari 5 menit). Coba jalanin ulang vibe-check dari awal.'
+      };
     }
 
     const bodyPayload = JSON.stringify(body);
@@ -54,12 +99,27 @@ const app = new Elysia()
 
     if (signature.length !== expectedSignature.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
       set.status = 403;
-      return { error: 'Forbidden', details: 'Invalid signature.' };
+      return {
+        error: '🔐 Signature Gak Cocok',
+        details: 'Tanda tangan digital request lu gak valid. Kemungkinan lu pake versi CLI yang outdated atau ada yang modif requestnya. Update CLI: npm i -g @jdze/vibe-check@latest'
+      };
     }
   })
   .post(
     '/api/roast',
-    async ({ body, set }) => {
+    async ({ request, body, set }) => {
+      // --- Rate Limit Check ---
+      const ip = getClientIp(request.headers as any);
+      const { allowed, remaining } = checkRateLimit(ip);
+
+      if (!allowed) {
+        set.status = 429;
+        return {
+          error: '🛑 Jatah Roasting Habis!',
+          details: `IP lu udah pake ${RATE_LIMIT_PER_IP}x jatah roasting gratis hari ini. Kuota di-reset tiap tengah malam UTC. Kalo mau unlimited, pake API Key Gemini lu sendiri (pilih opsi BYOK di CLI).`
+        };
+      }
+
       try {
         const { payload, language } = body;
 
@@ -78,14 +138,36 @@ const app = new Elysia()
         const response = result.response;
         const text = response.text();
 
-        return { roast: text };
+        return { roast: text, remaining };
       } catch (error: any) {
+        const msg = error.message || '';
         set.status = 500;
-        let errorMessage = 'Gagal nge-roast, Gemini-nya lagi ngambek atau kuota API habis.';
-        if (error.message && error.message.includes('503')) {
-          errorMessage = 'Gemini API lagi High Demand (503). Coba reload browser lu barangkali beruntung.';
+
+        if (msg.includes('503')) {
+          return {
+            error: '🔥 Gemini Lagi Overload (503)',
+            details: 'Server AI-nya lagi kewalahan nampung request. Ini bukan salah lu (untuk sekali ini). Coba reload browser lu, biasanya nanti dapet giliran.'
+          };
         }
-        return { error: errorMessage, details: error.message };
+
+        if (msg.includes('429') || msg.includes('quota') || msg.includes('rate')) {
+          return {
+            error: '📊 Kuota API Gemini Habis',
+            details: 'Jatah API Gemini server udah mentok hari ini. Coba lagi besok, atau pake API Key lu sendiri biar gak ngantri (pilih opsi BYOK di CLI).'
+          };
+        }
+
+        if (msg.includes('400') || msg.includes('INVALID_ARGUMENT')) {
+          return {
+            error: '📦 Project Lu Kegedean',
+            details: 'Payload project lu kegedean buat diproses Gemini. Coba kurangin jumlah file atau pake API Key sendiri yang limitnya lebih gede.'
+          };
+        }
+
+        return {
+          error: '💀 Yahh, Ada yang Error',
+          details: 'Gemini-nya lagi ngambek atau ada masalah internal. Coba lagi nanti, atau pake API Key lu sendiri biar lebih stabil.'
+        };
       }
     },
     {

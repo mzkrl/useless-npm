@@ -1,12 +1,79 @@
 #!/usr/bin/env node
-import { intro, outro, select, text, isCancel, cancel } from '@clack/prompts';
+import { intro, outro, select, text, isCancel, cancel, confirm, note } from '@clack/prompts';
 import pc from 'picocolors';
 import ora from 'ora';
 import open from 'open';
 import * as fs from 'fs/promises';
+import { readFileSync } from 'fs';
 import * as path from 'path';
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 import { startLocalServer } from './local-server.js';
 
+const PACKAGE_NAME = '@jdze/vibe-check';
+
+// Auto-read version from package.json — no more manual bumping!
+function getLocalVersion(): string {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const pkgPath = path.join(__dirname, '..', 'package.json');
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+    return pkg.version;
+  } catch {
+    return '0.0.0';
+  }
+}
+
+const CURRENT_VERSION = getLocalVersion();
+
+async function checkForUpdates(): Promise<void> {
+  try {
+    const res = await fetch(`https://registry.npmjs.org/${PACKAGE_NAME}/latest`, {
+      signal: AbortSignal.timeout(5000), // 5s timeout, don't block forever
+    });
+    if (!res.ok) return;
+    const data = await res.json() as { version: string };
+    const latest = data.version;
+
+    if (latest === CURRENT_VERSION) return;
+
+    // Compare semver (simple: split and compare numbers)
+    const cur = CURRENT_VERSION.split('.').map(Number);
+    const lat = latest.split('.').map(Number);
+    const isOutdated = lat[0] > cur[0] || 
+      (lat[0] === cur[0] && lat[1] > cur[1]) || 
+      (lat[0] === cur[0] && lat[1] === cur[1] && lat[2] > cur[2]);
+
+    if (!isOutdated) return;
+
+    note(
+      `Versi lu: ${pc.red(CURRENT_VERSION)} → Terbaru: ${pc.green(latest)}\n` +
+      `Update: ${pc.cyan(`npm i -g ${PACKAGE_NAME}@latest`)}`,
+      '🔔 Update Tersedia!'
+    );
+
+    const shouldUpdate = await confirm({
+      message: 'Mau auto-update sekarang?',
+    });
+
+    if (isCancel(shouldUpdate) || !shouldUpdate) {
+      console.log(pc.dim('Lanjut pake versi lama... dasar males update.'));
+      return;
+    }
+
+    const updateSpinner = ora('Updating... sabar ya noob.').start();
+    try {
+      execSync(`npm i -g ${PACKAGE_NAME}@latest`, { stdio: 'pipe' });
+      updateSpinner.succeed(pc.green(`Berhasil update ke v${latest}! Jalanin ulang vibe-check ya.`));
+      process.exit(0);
+    } catch (e) {
+      updateSpinner.fail(pc.red('Gagal auto-update. Coba manual: npm i -g @jdze/vibe-check@latest'));
+    }
+  } catch (e) {
+    // Silently fail - don't block the user if NPM registry is unreachable
+  }
+}
 const MAX_PAYLOAD_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
 const ALLOWED_EXTENSIONS = [
   // Web & JS Ecosystem
@@ -118,6 +185,9 @@ async function getPersonalKey(isId: boolean, cwd: string): Promise<string> {
 async function main() {
   console.clear();
   intro(pc.inverse(' VIBE CHECK '));
+
+  // Check for updates before anything else
+  await checkForUpdates();
 
   const cwd = process.cwd();
 
