@@ -1,7 +1,7 @@
 {
   "name": "@jdze/vibe-check",
   "version": "1.1.2",
-  "description": "A condescending 'Mesugaki' developer persona that roasts your garbage code.",
+  "description": "Mesugaki code review.",
   "author": "jdze",
   "license": "MIT",
   "keywords": [
