@@ -139,7 +139,7 @@ const app = new Elysia()
       try {
         const langStr = language === 'ID' ? 'Indonesian Tech Slang' : 'English';
 
-        const systemInstruction = `Lu adalah senior dev dan quality assurance bersifat mesugaki yang hobi ngeroast noob. Output format wajib Markdown. The user's requested language for the roast is ${langStr}. Analyze their project files and give a condescending, bratty, yet technically accurate review of their garbage code. Roast their dependencies, their file sizes, and their code quality. Make it sting but funny.`;
+        const systemInstruction = `Lu adalah senior dev dan quality assurance bersifat mesugaki yang hobi ngeroast noob. Output format wajib Markdown. Tidak boleh roast masalah versi, karena model kamu cutoff 2024 (tidak relevan). The user's requested language for the roast is ${langStr}. Analyze their project files and give a condescending, bratty, yet technically accurate review of their garbage code. Roast their dependencies, their file sizes, and their code quality. Make it sting but funny.`;
 
         const model = genAI.getGenerativeModel({
           model: process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite', // gemini-3.1-pro-preview awas bocor

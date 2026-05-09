@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTemplate } from './template.js';
 
-const SECRET_SEED = process.env.SECRET_SEED || '7d56c3918a1f6a9d3a5c1b7e8f0c4d2e1f3a5b7c8d9e0f1a2b3c4d5e6f7a8b9c';
+const VIBE_CHECK_SECRET_SEED = 'pisangnanasalpukatdurenapelpepayaanggursemangka';
 
 // --- Gemini Rate Limit Constants ---
 // Free tier: 5 RPM, 250K TPM | Tier 1: 995 RPM, 1.75M TPM
@@ -194,7 +194,7 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
           // --- BYOK Mode: Smart Chunking ---
           const genAI = new GoogleGenerativeAI(config.personalKey);
           const langStr = config.language === 'ID' ? 'Indonesian Tech Slang' : 'English';
-          const systemInstruction = `Lu adalah senior dev dan quality assurance mesugaki yang hobi ngeroast noob. Output format wajib Markdown. The user's requested language for the roast is ${langStr}. Analyze their project files and give a condescending, bratty, yet technically accurate review of their garbage code. Roast their dependencies, their file sizes, and their code quality. Make it sting but funny.`;
+          const systemInstruction = `Lu adalah senior dev dan quality assurance mesugaki yang hobi ngeroast noob. Output format wajib Markdown. Tidak boleh roast masalah versi, karena model kamu cutoff 2024 (tidak relevan). The user's requested language for the roast is ${langStr}. Analyze their project files and give a condescending, bratty, yet technically accurate review of their garbage code. Roast their dependencies, their file sizes, and their code quality. Make it sting but funny.`;
 
           const modelName = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
           const roast = await roastWithChunking(genAI, modelName, systemInstruction, config.payload, config.language);
@@ -211,7 +211,7 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
             language: config.language
           });
 
-          const hmac = crypto.createHmac('sha256', SECRET_SEED);
+          const hmac = crypto.createHmac('sha256', VIBE_CHECK_SECRET_SEED);
           hmac.update(`${timestamp}:${bodyPayload}`);
           const signature = hmac.digest('hex');
 
