@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTemplate } from './template.js';
 
-const SECRET_SEED = '7d56c3918a1f6a9d3a5c1b7e8f0c4d2e1f3a5b7c8d9e0f1a2b3c4d5e6f7a8b9c';
+const SECRET_SEED = 'biji-salak';
 
 interface ServerConfig {
   payload: string;
