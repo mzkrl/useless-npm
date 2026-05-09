@@ -88,11 +88,33 @@ async function roastWithChunking(
     systemInstruction,
   });
 
+  const MAX_RETRIES = 3;
+  const RETRY_DELAYS = [15_000, 30_000, 60_000]; // 15s, 30s, 60s
+
+  async function generateWithRetry(prompt: string, label: string): Promise<string> {
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+      } catch (e: any) {
+        const msg = e.message || '';
+        const isRetryable = msg.includes('503') || msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('UNAVAILABLE');
+
+        if (!isRetryable || attempt >= MAX_RETRIES) throw e;
+
+        const delay = RETRY_DELAYS[attempt] || 60_000;
+        console.log(`  ⚠️  ${label} failed (${msg.includes('503') ? '503 Overload' : '429 Rate Limit'})`);
+        console.log(`  🔄 Retry ${attempt + 1}/${MAX_RETRIES} in ${delay / 1000}s...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    throw new Error('Max retries exceeded');
+  }
+
   // --- Small payload: single request ---
   if (totalTokens <= SAFE_CHUNK_TOKENS) {
     console.log(`  📤 Single request (${totalTokens.toLocaleString()} tokens)`);
-    const result = await model.generateContent(`Here is the user's project payload:\n\n${payload}`);
-    return result.response.text();
+    return await generateWithRetry(`Here is the user's project payload:\n\n${payload}`, 'Request');
   }
 
   // --- Large payload: chunked requests ---
@@ -118,8 +140,8 @@ async function roastWithChunking(
       : '';
 
     const prompt = `${chunkInstruction}\n\nHere is the project payload:\n\n${chunks[i]}`;
-    const result = await model.generateContent(prompt);
-    partialReviews.push(result.response.text());
+    const text = await generateWithRetry(prompt, `Chunk ${i + 1}/${chunks.length}`);
+    partialReviews.push(text);
     console.log(`  ✅ Chunk ${i + 1}/${chunks.length} done`);
 
     // Wait between chunks (except after the last one)

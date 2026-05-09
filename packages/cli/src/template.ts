@@ -66,12 +66,25 @@ export function getTemplate() {
             text-align: center;
             margin: 4rem 0;
             color: #e9c46a;
-            animation: blink 1s infinite;
         }
-        @keyframes blink {
-            0% { opacity: 1; }
+        #loading-text {
+            animation: bounce 2s ease-in-out infinite;
+            font-size: 12px;
+        }
+        #loading .nes-progress {
+            animation: dimPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes dimPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        @keyframes cursorBlink {
+            0%, 100% { opacity: 1; }
             50% { opacity: 0; }
-            100% { opacity: 1; }
         }
         .avatar {
             display: flex;
@@ -95,7 +108,7 @@ export function getTemplate() {
             width: 10px;
             height: 1em;
             background-color: #fff;
-            animation: blink 1s infinite;
+            animation: cursorBlink 1s infinite;
             vertical-align: middle;
             margin-left: 5px;
         }
