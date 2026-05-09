@@ -41,8 +41,8 @@ async function checkForUpdates(): Promise<void> {
     // Compare semver (simple: split and compare numbers)
     const cur = CURRENT_VERSION.split('.').map(Number);
     const lat = latest.split('.').map(Number);
-    const isOutdated = lat[0] > cur[0] || 
-      (lat[0] === cur[0] && lat[1] > cur[1]) || 
+    const isOutdated = lat[0] > cur[0] ||
+      (lat[0] === cur[0] && lat[1] > cur[1]) ||
       (lat[0] === cur[0] && lat[1] === cur[1] && lat[2] > cur[2]);
 
     if (!isOutdated) return;
@@ -85,8 +85,30 @@ const ALLOWED_EXTENSIONS = [
   // Data, Docs & Environment
   '.json', '.yaml', '.yml', '.toml', '.xml', '.env', '.md', '.sql', '.ini', '.conf', '.cfg', '.dockerfile', '.make', '.cmake', '.gradle'
 ];
-const IGNORED_DIRS = ['node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 'out', '.svelte-kit'];
-const IGNORED_FILES = ['bun.lockb', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock'];
+const IGNORED_DIRS = [
+  // JS/TS Ecosystem
+  'node_modules', '.next', '.nuxt', 'out', '.svelte-kit', '.astro', '.parcel-cache', '.turbo', '.vercel', '.netlify',
+  // Build & Dist
+  'dist', 'build', '.output', 'target', 'bin', 'obj', 'cmake-build-debug', 'cmake-build-release',
+  // Python
+  'venv', '.venv', 'env', '__pycache__', '.pytest_cache', '.mypy_cache', '.ruff_cache', 'site-packages', '.eggs', '*.egg-info',
+  // Version Control & IDE
+  '.git', '.svn', '.hg', '.idea', '.vscode', '.vs', '.eclipse',
+  // Misc
+  'coverage', '.cache', '.tmp', 'tmp', 'temp', '.tox', '.nox', '.terraform',
+  // Data & ML
+  'dataset', 'datasets', '.ipynb_checkpoints', 'checkpoints', 'wandb', 'mlruns',
+  // Mobile
+  'Pods', '.gradle', '.dart_tool', '.pub-cache',
+  // Gemini/Agent
+  '.gemini', '.agents',
+];
+const IGNORED_FILES = [
+  // Lock files
+  'bun.lockb', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock', 'uv.lock', 'Pipfile.lock', 'poetry.lock', 'composer.lock', 'Gemfile.lock', 'Cargo.lock', 'go.sum',
+  // Build artifacts & maps
+  '.min.js', '.min.css', '.map',
+];
 
 interface ScanResult {
   totalSize: number;
@@ -104,6 +126,8 @@ async function scanDirectory(dir: string, result: ScanResult) {
       const ext = path.extname(entry.name);
       if (ALLOWED_EXTENSIONS.includes(ext) || entry.name.startsWith('.env')) {
         if (IGNORED_FILES.includes(entry.name)) continue;
+        // Skip minified/map files
+        if (entry.name.endsWith('.min.js') || entry.name.endsWith('.min.css') || entry.name.endsWith('.map')) continue;
         const filePath = path.join(dir, entry.name);
         // Avoid duplicate package.json since it's already added manually
         if (entry.name === 'package.json' && dir === process.cwd()) continue;
@@ -232,18 +256,18 @@ async function main() {
 
   if (scanResult.totalSize <= MAX_PAYLOAD_SIZE) {
     const keyChoice = await select({
-      message: isId 
+      message: isId
         ? 'Mau pake API Key Gemini sendiri atau pake jatah gw (Cloud Run)?'
         : 'Use your own Gemini API Key or use mine (Cloud Run)?',
-      options: isId 
+      options: isId
         ? [
-            { value: 'cloud', label: 'Pake jatah lu ngab (Cloud Run)' },
-            { value: 'personal', label: 'Gw orang kaya, pake API Key sendiri' }
-          ]
+          { value: 'cloud', label: 'Pake jatah lu ngab (Cloud Run)' },
+          { value: 'personal', label: 'Gw orang kaya, pake API Key sendiri' }
+        ]
         : [
-            { value: 'cloud', label: 'Use yours bro (Cloud Run)' },
-            { value: 'personal', label: 'I am rich, use my own API Key' }
-          ]
+          { value: 'cloud', label: 'Use yours bro (Cloud Run)' },
+          { value: 'personal', label: 'I am rich, use my own API Key' }
+        ]
     });
 
     if (isCancel(keyChoice)) {
@@ -257,18 +281,18 @@ async function main() {
       useCloudRun = true;
     }
   } else {
-    console.log(pc.red(isId 
+    console.log(pc.red(isId
       ? `File lu kegedean (${sizeKB} KB)! Server gw bisa jebol nampung kode ampas lu. Modal API Key sendiri, noob!`
       : `Your file is too big (${sizeKB} KB)! My server will crash handling your garbage code. Use your own API Key, noob!`
     ));
     personalKey = await getPersonalKey(isId, cwd);
   }
 
-  const startingMessage = isId 
+  const startingMessage = isId
     ? 'Menganalisa tumpukan sampah di direktori lu... 🗑️'
     : 'Analyzing the garbage dump in your directory... 🗑️';
   const startingSpinner = ora(pc.magenta(startingMessage)).start();
-  
+
   // Start server
   const port = await startLocalServer({
     payload: scanResult.payload,
@@ -278,8 +302,8 @@ async function main() {
   });
 
   startingSpinner.stop();
-  
-  outro(pc.green(isId 
+
+  outro(pc.green(isId
     ? `Server nyala di http://localhost:${port} - Buka browser lu!`
     : `Server is running at http://localhost:${port} - Open your browser!`
   ));
