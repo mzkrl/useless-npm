@@ -15,6 +15,9 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 const app = new Elysia()
   .use(cors())
+  .get('/', () => {
+    return 'Backend is running.\n\nInstall the CLI to roast your code:\nnpm i -g @jdze/vibe-check';
+  })
   .onBeforeHandle(({ request, headers, body, set }) => {
     // Bypass authentication for CORS preflight
     if (request.method === 'OPTIONS') return;
