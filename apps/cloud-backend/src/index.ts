@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
 const port = process.env.PORT || 8080;
-const SECRET_SEED = 'biji-salak';
+const VIBE_CHECK_SECRET_SEED = 'vibe-check-super-secret-seed-12345';
 const API_KEY = process.env.GEMINI_API_KEY || '';
 const RATE_LIMIT_PER_IP = 7; // Max requests per IP per day
 
@@ -102,7 +102,7 @@ const app = new Elysia()
     }
 
     const bodyPayload = JSON.stringify(body);
-    const hmac = crypto.createHmac('sha256', SECRET_SEED);
+    const hmac = crypto.createHmac('sha256', VIBE_CHECK_SECRET_SEED);
     hmac.update(`${timestamp}:${bodyPayload}`);
     const expectedSignature = hmac.digest('hex');
 
@@ -142,7 +142,7 @@ const app = new Elysia()
         const systemInstruction = `Lu adalah senior dev dan quality assurance bersifat mesugaki yang hobi ngeroast noob. Output format wajib Markdown. The user's requested language for the roast is ${langStr}. Analyze their project files and give a condescending, bratty, yet technically accurate review of their garbage code. Roast their dependencies, their file sizes, and their code quality. Make it sting but funny.`;
 
         const model = genAI.getGenerativeModel({
-          model: process.env.GEMINI_MODEL || 'gemini-3-flash-preview', // gemini-3.1-pro-preview awas bocor
+          model: process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite', // gemini-3.1-pro-preview awas bocor
           systemInstruction,
         });
 

@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTemplate } from './template.js';
 
-const SECRET_SEED = 'biji-salak';
+const VIBE_CHECK_SECRET_SEED = 'vibe-check-super-secret-seed-12345';
 
 interface ServerConfig {
   payload: string;
@@ -43,7 +43,7 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
           const systemInstruction = `Lu adalah senior dev dan quality assurance mesugaki yang hobi ngeroast noob. Output format wajib Markdown. The user's requested language for the roast is ${langStr}. Analyze their project files and give a condescending, bratty, yet technically accurate review of their garbage code. Roast their dependencies, their file sizes, and their code quality. Make it sting but funny.`;
 
           const model = genAI.getGenerativeModel({
-            model: process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite',
+            model: process.env.GEMINI_MODEL || 'gemini-3-flash-preview',
             systemInstruction,
           });
 
@@ -61,7 +61,7 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
             language: config.language
           });
 
-          const hmac = crypto.createHmac('sha256', SECRET_SEED);
+          const hmac = crypto.createHmac('sha256', VIBE_CHECK_SECRET_SEED);
           hmac.update(`${timestamp}:${bodyPayload}`);
           const signature = hmac.digest('hex');
 
