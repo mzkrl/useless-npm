@@ -1,9 +1,11 @@
 name: Publish CLI to NPM
 
 on:
-  # Jalan otomatis kalau lu bikin Release baru di GitHub
-  release:
-    types: [created]
+  # Auto-publish tiap push ke main (cuma jalan kalo versi beda)
+  push:
+    branches: [main]
+    paths:
+      - 'packages/cli/**'
   # Bisa dipencet manual juga dari tab Actions
   workflow_dispatch:
 
@@ -17,28 +19,50 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
+
+      - name: Check Version Diff
+        id: version_check
+        run: |
+          LOCAL_VERSION=$(node -p "require('./packages/cli/package.json').version")
+          echo "Local version: $LOCAL_VERSION"
+
+          # Fetch latest version from NPM registry
+          NPM_VERSION=$(npm view @jdze/vibe-check version 2>/dev/null || echo "0.0.0")
+          echo "NPM version: $NPM_VERSION"
+
+          if [ "$LOCAL_VERSION" = "$NPM_VERSION" ]; then
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Versi sama ($LOCAL_VERSION), skip publish."
+          else
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+            echo "🚀 Versi beda! $NPM_VERSION → $LOCAL_VERSION, lanjut publish."
+          fi
+
       - name: Setup Bun
+        if: steps.version_check.outputs.should_publish == 'true'
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
           
       - name: Setup Node.js (buat NPM Publish)
+        if: steps.version_check.outputs.should_publish == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
           
       - name: Install Dependencies
+        if: steps.version_check.outputs.should_publish == 'true'
         run: bun install
         
       - name: Build CLI
+        if: steps.version_check.outputs.should_publish == 'true'
         run: bun run build
         working-directory: packages/cli
         
       - name: Publish to NPM
+        if: steps.version_check.outputs.should_publish == 'true'
         run: npm publish --access public --provenance
         working-directory: packages/cli
         env:
-          # Lu harus masukin token NPM lu di GitHub Secrets -> NPM_TOKEN
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
