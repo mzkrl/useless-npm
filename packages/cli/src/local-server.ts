@@ -50,7 +50,7 @@ export async function startLocalServer(config: ServerConfig): Promise<number> {
           res.end(JSON.stringify({ roast: result.response.text() }));
         } else if (config.useCloudRun) {
           // Send to Cloud Run backend
-          const targetUrl = process.env.CLOUD_RUN_URL || 'http://localhost:8080/api/roast'; //duh le billing kenonaktif
+          const targetUrl = process.env.CLOUD_RUN_URL || 'https://useless-npm-1085257795815.asia-southeast3.run.app/api/roast'; //duh le billing kenonaktif
 
           const response = await fetch(targetUrl, {
             method: 'POST',
