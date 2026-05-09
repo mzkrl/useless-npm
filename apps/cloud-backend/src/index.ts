@@ -1,8 +1,10 @@
 import { Elysia, t } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import * as crypto from 'crypto';
 
 const port = process.env.PORT || 8080;
+const VIBE_CHECK_SECRET_SEED = 'vibe-check-super-secret-seed-12345';
 const API_KEY = process.env.GEMINI_API_KEY || '';
 
 if (!API_KEY) {
@@ -13,6 +15,42 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 const app = new Elysia()
   .use(cors())
+  .onBeforeHandle(({ headers, body, set }) => {
+    // Validate HMAC Signature
+    const timestamp = headers['x-vibe-timestamp'];
+    const signature = headers['x-vibe-signature'];
+
+    if (!timestamp || !signature) {
+      set.status = 401;
+      return { error: 'Unauthorized', details: 'Missing authentication headers.' };
+    }
+
+    const now = Date.now();
+    const requestTime = parseInt(timestamp, 10);
+
+    if (isNaN(requestTime)) {
+      set.status = 400;
+      return { error: 'Bad Request', details: 'Invalid timestamp.' };
+    }
+
+    const timeDiff = Math.abs(now - requestTime);
+
+    // Block requests older than 5 minutes (300000 ms)
+    if (timeDiff > 300000) {
+      set.status = 403;
+      return { error: 'Forbidden', details: 'Request expired.' };
+    }
+
+    const bodyPayload = JSON.stringify(body);
+    const hmac = crypto.createHmac('sha256', VIBE_CHECK_SECRET_SEED);
+    hmac.update(`${timestamp}:${bodyPayload}`);
+    const expectedSignature = hmac.digest('hex');
+
+    if (signature.length !== expectedSignature.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+      set.status = 403;
+      return { error: 'Forbidden', details: 'Invalid signature.' };
+    }
+  })
   .post(
     '/api/roast',
     async ({ body, set }) => {
