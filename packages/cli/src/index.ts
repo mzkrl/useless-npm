@@ -84,7 +84,7 @@ const ALLOWED_EXTENSIONS = [
   // Scripts & Configs
   '.sh', '.bash', '.zsh', '.bat', '.ps1', '.lua', '.r', '.jl', '.pl', '.ex', '.exs', '.erl', '.clj', '.fs', '.f', '.f90', '.zig', '.v', '.nim', '.cr',
   // Data, Docs & Environment
-  '.json', '.yaml', '.yml', '.toml', '.xml', '.env', '.md', '.sql', '.ini', '.conf', '.cfg', '.dockerfile', '.make', '.cmake', '.gradle'
+  '.json', '.yaml', '.yml', '.toml', '.xml', '.md', '.sql', '.ini', '.conf', '.cfg', '.dockerfile', '.make', '.cmake', '.gradle'
 ];
 const IGNORED_DIRS = [
   // JS/TS Ecosystem
@@ -109,6 +109,8 @@ const IGNORED_FILES = [
   'bun.lockb', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock', 'uv.lock', 'Pipfile.lock', 'poetry.lock', 'composer.lock', 'Gemfile.lock', 'Cargo.lock', 'go.sum',
   // Build artifacts & maps
   '.min.js', '.min.css', '.map',
+  // Environment files (never exfiltrate secrets)
+  '.env', '.env.local', '.env.development', '.env.production', '.env.staging', '.env.test',
 ];
 
 interface ScanResult {
@@ -144,7 +146,7 @@ async function scanDirectory(dir: string, result: ScanResult, maxSize: number) {
       await scanDirectory(path.join(dir, entry.name), result, maxSize);
     } else {
       const ext = path.extname(entry.name);
-      if (ALLOWED_EXTENSIONS.includes(ext) || entry.name.startsWith('.env')) {
+      if (ALLOWED_EXTENSIONS.includes(ext)) {
         if (IGNORED_FILES.includes(entry.name)) continue;
         // Skip minified/map files
         if (entry.name.endsWith('.min.js') || entry.name.endsWith('.min.css') || entry.name.endsWith('.map')) continue;

@@ -116,6 +116,7 @@ function getLandingPageHTML(): string {
     <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
     <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -431,7 +432,7 @@ function getLandingPageHTML(): string {
                         '<p style="color:#e76f51;">' + data.error + '</p>' +
                         '<p>' + (data.details || '') + '</p>';
                 } else {
-                    document.getElementById('roast-output').innerHTML = marked.parse(data.roast);
+                    document.getElementById('roast-output').innerHTML = DOMPurify.sanitize(marked.parse(data.roast));
                 }
             })
             .catch(function(err) {

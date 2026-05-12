@@ -9,6 +9,7 @@ export function getTemplate() {
     <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
     <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <style>
         body {
             background-color: #212529;
@@ -193,8 +194,9 @@ export function getTemplate() {
                 if (data.error) {
                     typeWriter(data.error + "\\n\\n" + (data.details || ''));
                 } else {
-                    const htmlContent = marked.parse(data.roast);
-                    typeHTML(htmlContent, document.getElementById('roast-output'));
+                    const rawHtmlContent = marked.parse(data.roast);
+                    const safeHtmlContent = DOMPurify.sanitize(rawHtmlContent);
+                    typeHTML(safeHtmlContent, document.getElementById('roast-output'));
                 }
             } catch (err) {
                 clearInterval(msgInterval);
