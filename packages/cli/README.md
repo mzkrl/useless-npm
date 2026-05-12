@@ -1,6 +1,7 @@
 # Vibe Check CLI (@jdze/vibe-check)
 
 [![NPM Version](https://img.shields.io/npm/v/@jdze/vibe-check.svg)](https://www.npmjs.com/)
+[![Socket Badge](https://badge.socket.dev/npm/package/@jdze/vibe-check/1.2.5)](https://badge.socket.dev/npm/package/@jdze/vibe-check/1.2.5)
 [![Built with Bun](https://img.shields.io/badge/Bun-%23000000.svg?logo=bun&logoColor=white)](https://bun.sh)
 [![Powered by Gemini](https://img.shields.io/badge/Powered%20by-Google%20Gemini-blue.svg)](https://deepmind.google/technologies/gemini/)
 
@@ -21,6 +22,26 @@ Dibuat khusus untuk meramaikan ajang **Google Vibe Coding Competition**. Sekali 
     * Kalo *project* lu segede gaban: CLI bakal ngejek lu miskin dan maksa lu masukin API Key Gemini lu sendiri (BYOK - Bring Your Own Key). Server gw ga sudi nampung *bloatware* lu! 🗑️
 * 🚀 **Auto-Spin ElysiaJS Server:** Hasil *roast* ga cuma ditampilin di terminal kaku. CLI ini otomatis ngebuka `http://localhost:6769` di *browser* lu, nampilin UI retro 8-bit (NES.css) dengan animasi CSS *fade-in* yang elegan secara visual.
 * 🌍 **Polyglot Roast:** Nggak cuma roaster JS/TS doang. Tool ini sanggup ngebantai kode Python, Go, Rust, Java, C++, Ruby, PHP, Swift, Kotlin, config YAML/JSON/TOML, sampai bash script.
+
+---
+
+## 🛡️ Klarifikasi Keamanan & False Positives (Security Audit)
+
+Jika Anda memindai *package* ini menggunakan *security scanner* pihak ketiga (seperti Socket.dev), Anda mungkin akan melihat peringatan keamanan dengan status *"High-risk data exfiltration"*. Kami menganggap serius masalah privasi dan keamanan, oleh karena itu kami ingin memberikan klarifikasi teknis mengenai peringatan tersebut:
+
+* 🚨 **Peringatan 1: Modul ini secara rekursif membaca file lokal dan mengirimkannya ke server eksternal.**
+  * **Klarifikasi:** Sebagai *tool code review* berbasis AI, fungsi utama CLI ini adalah membaca kode sumber Anda agar dapat dianalisis oleh API Google Gemini. Namun, mulai dari versi `1.2.5`, kami telah menerapkan filter ketat (di dalam `IGNORED_FILES`) untuk memastikan bahwa file sensitif seperti `.env`, `.env.local`, dan varian *secret* lainnya **tidak akan pernah** dibaca maupun dikirimkan ke dalam *payload*. Data Anda hanya diproses oleh memori AI dan tidak disimpan ke dalam *database* apa pun.
+
+* 🚨 **Peringatan 2: Modul membaca `.env` untuk mengambil API Key pengguna.**
+  * **Klarifikasi:** Pemindaian file `.env` di direktori lokal hanya dilakukan secara spesifik untuk mencari ketersediaan variabel `GEMINI_API_KEY`. Ini merupakan fitur kenyamanan (*Developer Experience*) agar Anda tidak perlu memasukkan API Key secara manual setiap kali *tool* dijalankan. CLI akan **selalu meminta izin Anda secara interaktif** (Yes/No prompt) sebelum kunci tersebut digunakan. Kami tidak pernah menyedot atau mendistribusikan kredensial Anda secara sepihak.
+
+* 🚨 **Peringatan 3: Terdapat *endpoint* HTTP lokal tanpa autentikasi dengan CORS yang permisif.**
+  * **Klarifikasi:** Server lokal pada *port* `6769` bersifat *ephemeral* (sementara) dan hanya hidup selama *command* CLI sedang dieksekusi di terminal Anda. Aturan CORS disetel secara terbuka murni untuk memfasilitasi jembatan komunikasi lokal antara terminal dan antarmuka web (UI) yang otomatis terbuka di *browser* Anda. Saat *browser* atau terminal ditutup, server tersebut akan langsung mati secara otomatis.
+
+* 🚨 **Peringatan 4: Fitur *auto-update* berbasis `execSync` yang berpotensi mengeksekusi kode.**
+  * **Klarifikasi:** CLI ini memiliki fitur pembaruan versi otomatis agar pengguna mendapatkan perbaikan *prompt* dan fitur terbaru. Namun, eksekusi perintah (seperti `npm i -g`) **tidak akan pernah** berjalan di latar belakang tanpa sepengetahuan pengguna. Sistem akan selalu memunculkan konfirmasi persetujuan di layar terminal yang memerlukan interaksi pengguna sebelum pembaruan dieksekusi.
+
+**Kesimpulan:** Seluruh kode sumber (*source code*) kami bersifat publik dan *open-source*. Kami sangat mengundang Anda untuk melakukan audit kode secara mandiri (terutama di dalam `packages/cli/src/index.ts`) untuk memastikan transparansi dan keamanan implementasi kami.
 
 ---
 
