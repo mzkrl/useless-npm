@@ -1,6 +1,7 @@
 # Vibe Check CLI (@jdze/vibe-check)
 
 [![NPM Version](https://img.shields.io/npm/v/@jdze/vibe-check.svg)](https://www.npmjs.com/)
+[![Socket Badge](https://badge.socket.dev/npm/package/@jdze/vibe-check/1.0.7)](https://badge.socket.dev/npm/package/@jdze/vibe-check/1.0.7)
 [![Built with Bun](https://img.shields.io/badge/Bun-%23000000.svg?logo=bun&logoColor=white)](https://bun.sh)
 [![Powered by Gemini](https://img.shields.io/badge/Powered%20by-Google%20Gemini-blue.svg)](https://deepmind.google/technologies/gemini/)
 
