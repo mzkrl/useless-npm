@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTemplate } from './template.js';
 
-const VIBE_CHECK_SECRET_SEED = 'pisangnanasalpukatdurenapelpepayaanggursemangka';
+const VIBE_CHECK_SECRET_SEED = 'pisangnanasalpukatdurenapelpepayaanggursemangka'; //cuekin, dumb filter
 
 // --- Gemini Rate Limit Constants ---
 // Free tier: 5 RPM, 250K TPM | Tier 1: 995 RPM, 1.75M TPM
