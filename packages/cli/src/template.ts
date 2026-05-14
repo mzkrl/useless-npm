@@ -113,6 +113,16 @@ export function getTemplate() {
             vertical-align: middle;
             margin-left: 5px;
         }
+        .copy-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        .copy-row .nes-btn {
+            font-size: 10px;
+            padding: 4px 12px;
+            transition: opacity 0.2s;
+        }
     </style>
 </head>
 <body>
@@ -132,6 +142,9 @@ export function getTemplate() {
             </div>
             <div id="roast-output" class="roast-content"></div>
             <span id="cursor" class="cursor" style="display: none;"></span>
+            <div class="copy-row" id="copy-row" style="display: none;">
+                <button type="button" class="nes-btn is-primary" id="copy-btn" onclick="copyRoast()">📋 Copy</button>
+            </div>
         </div>
     </div>
 
@@ -151,12 +164,42 @@ export function getTemplate() {
             "Compiling your sins into a neat Markdown report...",
             "Fetching the burn unit... they're gonna need it. 🔥",
             "Decrypting your terrible architecture choices...",
-            "AI-nya lagi mikir kenapa lu bikin kode kayak gini...",
-            "Ngitung berapa banyak technical debt lu... gila banyak.",
             "Cross-referencing your code with 'what not to do' guides...",
             "Even GitHub Copilot refused to autocomplete your code. 💀",
             "Gemini is questioning its existence after reading your code...",
             "Your code is loading... unlike your career as a developer. 😏",
+            "Running rm -rf on my respect for your codebase... 🗑️",
+            "Asking ChatGPT if your code counts as a war crime...",
+            "Parsing your indentation... tabs AND spaces?! 😤",
+            "Downloading more RAM to process this mess...",
+            "Your git blame is basically a crime scene investigation. 🔍",
+            "Initializing sarcasm module... loading complete.",
+            "Bro really named a variable 'x2_final_FINAL_v3'... 💀",
+            "Evaluating if this was written by a human or a cat on a keyboard. 🐱",
+            "You wrapped your entire app in try-catch... respect. And by respect I mean no.",
+            "Checking if you have tests... lmao just kidding.",
+            "Your senior dev is crying in the corner right now...",
+            "Counting how many times you copy-pasted from Stack Overflow...",
+            "Your README says 'will add docs later'... that was 2 years ago.",
+            "Thinking of a polite way to say your code is garbage... 🤔",
+            "Found 47 TODO comments and 0 completed ones. Classic. 📉",
+            "Your if-else chain is longer than your resume...",
+            "Your nesting is deeper than Inception... 7 levels deep bro. 🌀",
+            "Calculating your code's carbon footprint... it's criminal.",
+            "Fun fact: your code could be used to teach anti-patterns.",
+            "Reviewing your error handling... oh wait, there is none.",
+            "Parsing your CSS... why is everything !important?! 😵",
+            "Your function has 14 parameters. FOURTEEN.",
+            "Reading your commit messages... 'fix', 'fix2', 'fix final'. 🙄",
+            "Detecting spaghetti levels... this is lasagna code. Layered spaghetti.",
+            "You deploy straight to production? Bold. And I mean that negatively.",
+            "Estimating how many mass deploys you've broken with this...",
+            "Found a console.log('asdf') in production code. Beautiful. 👨‍🎨",
+            "Even ESLint gave up and returned 'I quit'.",
+            "Your code has more comments than logic... and the comments are wrong.",
+            "Checking if you use === or == ... already disappointed.",
+            "Your package.json has 97 dependencies for a todo app. 📦",
+            "Measuring the mass of your technical debt... it has its own gravity.",
         ];
 
         let msgIndex = 0;
@@ -223,6 +266,7 @@ export function getTemplate() {
                 if (i >= text.length) {
                     clearInterval(timer);
                     cursor.style.display = 'none';
+                    document.getElementById('copy-row').style.display = 'flex';
                 }
             }, 10);
         }
@@ -268,8 +312,25 @@ export function getTemplate() {
                 if (i >= htmlStr.length) {
                     clearInterval(timer);
                     cursor.style.display = 'none';
+                    document.getElementById('copy-row').style.display = 'flex';
                 }
             }, 10);
+        }
+
+        function copyRoast() {
+            const el = document.getElementById('roast-output');
+            const text = el.innerText || el.textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                const btn = document.getElementById('copy-btn');
+                btn.textContent = '✅ Copied!';
+                btn.classList.remove('is-primary');
+                btn.classList.add('is-success');
+                setTimeout(function() {
+                    btn.textContent = '📋 Copy';
+                    btn.classList.remove('is-success');
+                    btn.classList.add('is-primary');
+                }, 2000);
+            });
         }
 
         fetchRoast();

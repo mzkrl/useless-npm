@@ -6,7 +6,7 @@ import open from 'open';
 import * as fs from 'fs/promises';
 import { readFileSync } from 'fs';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { startLocalServer } from './local-server.js';
 
@@ -64,7 +64,7 @@ async function checkForUpdates(): Promise<void> {
 
     const updateSpinner = ora('Updating... sabar ya noob.').start();
     try {
-      execSync(`npm i -g ${PACKAGE_NAME}@latest`, { stdio: 'pipe' });
+      spawnSync('npm', ['i', '-g', `${PACKAGE_NAME}@latest`], { stdio: 'pipe', shell: false });
       updateSpinner.succeed(pc.green(`Berhasil update ke v${latest}! Jalanin ulang vibe-check ya.`));
       process.exit(0);
     } catch (e) {
